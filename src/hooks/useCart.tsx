@@ -73,7 +73,6 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
     try {
       const productsInCart: Product[] = [...cart];
       productsInCart.splice(productsInCart.findIndex(product => product.id === productId), 1);
-      console.log(productsInCart);
       setCart(productsInCart);
     } catch {
       toast.error('Erro na remoção do produto');
@@ -85,9 +84,25 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
     amount,
   }: UpdateProductAmount) => {
     try {
-      // TODO
+      const productsInCart: Product[] = [...cart];
+      const selectedProduct = productsInCart.find(p => p.id === productId);
+
+      if (selectedProduct && amount > selectedProduct?.amount) {
+        const stockProduct = await (await api.get(`/stock/${productId}`)).data;
+
+        if (stockProduct.amount < amount) {
+          throw ("Quantidade solicitada fora de estoque")
+        } else {
+          selectedProduct.amount++;
+        }
+      }
+      if (selectedProduct && amount < selectedProduct?.amount) {
+        selectedProduct.amount--;
+      }
+
+      setCart(productsInCart);
     } catch {
-      // TODO
+      toast.error('Quantidade solicitada fora de estoque');
     }
   };
 
