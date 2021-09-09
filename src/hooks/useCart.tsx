@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useState } from 'react';
+import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { api } from '../services/api';
 import { Product, Stock } from '../types';
@@ -32,12 +32,41 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
     return [];
   });
 
+  useEffect(() => {
+    localStorage.setItem('@RocketShoes:cart', JSON.stringify(cart));
+  }, [cart])
+
   const addProduct = async (productId: number) => {
     try {
-      // TODO
+      const stockProduct = await (await api.get(`/stock/${productId}`)).data;
+      const productsInCart: Product[] = [...cart];
+      const selectedProduct = productsInCart.find(product => product.id === productId);
+
+      if ((selectedProduct?.amount && selectedProduct?.amount + 1 > stockProduct.amount) || stockProduct.amount === 0) {
+        throw ("Quantidade solicitada fora de estoque")
+      }
+
+      if (!selectedProduct) {
+        const productData = await (await api.get(`/products/${productId}`)).data;
+
+        productsInCart.push(
+          {
+            ...productData,
+            amount: 1
+          }
+        );
+
+        setCart(productsInCart);
+
+      } else {
+        selectedProduct.amount++;
+        setCart(productsInCart);
+      }
+
     } catch {
-      // TODO
+      toast.error("Quantidade solicitada fora de estoque");
     }
+
   };
 
   const removeProduct = (productId: number) => {
