@@ -1,7 +1,7 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { api } from '../services/api';
-import { Product, Stock } from '../types';
+import { Product } from '../types';
 
 interface CartProviderProps {
   children: ReactNode;
@@ -43,7 +43,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
       const selectedProduct = productsInCart.find(product => product.id === productId);
 
       if ((selectedProduct?.amount && selectedProduct?.amount + 1 > stockProduct.amount) || stockProduct.amount === 0) {
-        throw ("Quantidade solicitada fora de estoque")
+        throw Error("Quantidade solicitada fora de estoque")
       }
 
       if (!selectedProduct) {
@@ -91,7 +91,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
         const stockProduct = await (await api.get(`/stock/${productId}`)).data;
 
         if (stockProduct.amount < amount) {
-          throw ("Quantidade solicitada fora de estoque")
+          throw Error("Quantidade solicitada fora de estoque")
         } else {
           selectedProduct.amount++;
         }
